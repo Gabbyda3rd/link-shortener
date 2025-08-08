@@ -24,11 +24,16 @@ class ShortUrlController extends Controller
         ]);
 
         $shortCode = Str::random(6);
-        $shorUrl = url("/{$shortCode}");
+        $shortUrl = url("/{$shortCode}");
         
 
         $qrPath = "qrcode/{$shortCode}.svg";
-        Storage::put("public/".$qrPath,QrCode::format('svg')->size(200)->generate($shorUrl));
+        // Storage::makeDirectory($qrPath);
+        // Storage::put($qrPath,QrCode::format('svg')->size(200)->generate($shorUrl));
+        Storage::disk('public')->makeDirectory('qrcode');
+        Storage::disk('public')->put($qrPath,QrCode::format('svg')->size(200)->generate($shortUrl));
+
+
 
         $short = ShortUrl::create([
             'original_url'=>$request->input('url'),
@@ -37,7 +42,7 @@ class ShortUrlController extends Controller
         ]);
 
         return view('shortener',[
-            'shortUrl'=>$shorUrl,
+            'shortUrl'=>$shortUrl,
             'qrCodePath'=>$qrPath
         ]);
     }
