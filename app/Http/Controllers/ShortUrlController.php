@@ -19,11 +19,26 @@ class ShortUrlController extends Controller
     public function store(Request $request)
     {
 
-        $request->validate([
-            'url'=>'required|url'
-        ]);
+        $rules = [
+            'url' => 'required|url',
+            'link_type' =>'required|in:auto,custom'
+        ];
 
-        $shortCode = Str::random(6);
+        if($request->link_type === 'custom') {
+            $rules['custom_code'] = 'required|alpha_num|unique:short_urls,short_code|min:3|max:20';
+        }
+
+        $request->validate($rules);
+
+        // $request->validate([
+        //     'url'=>'required|url'
+        //     // 'custom_code'=>'required|alpha_num|min:3|max:20'
+        // ]);
+            
+
+        $shortCode = $request->link_type === 'custom'
+        ?$request->custom_code
+        :Str::random(6);
         $shortUrl = url("/{$shortCode}");
         
 
@@ -52,5 +67,11 @@ class ShortUrlController extends Controller
         $short = ShortUrl::where('short_code',$code)->firstOrFail();
         $short->increment('visit_count');
         return redirect($short->original_url);
+    }
+
+    public function show($shortcode)
+    {
+        $short = ShortUrl::where('short_code', $shortcode)->firstOrFail();
+        return redirect()->away($short->original_url);
     }
 }

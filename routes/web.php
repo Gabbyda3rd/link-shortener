@@ -8,5 +8,5 @@ Route::get('/', function () {
     return view('shortener');
 });
 Route::get('/',[ShortUrlController::class,'index']);
-Route::post('/shorten',[ShortUrlController::class,'store'])->name('shorten');
-Route::get('/{code}',[ShortUrlController::class,'redirect']);
+Route::post('/shorten',[ShortUrlController::class,'store'])->name('shorten.store');
+Route::get('/{code}',[ShortUrlController::class,'show']);
