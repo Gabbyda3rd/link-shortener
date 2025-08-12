@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Storage; 
+use Illuminate\Validation\Rule;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use App\Models\ShortUrl;
 
@@ -16,50 +17,74 @@ class ShortUrlController extends Controller
         return view('shortener');
     }
 
+    public function create()
+    {
+        return redirect()->route('home');
+    }
+
     public function store(Request $request)
     {
+ // Validation rules
+    $rules = [
+        'url' => 'required|url',
+        'link_type' => 'required|in:auto,custom'
+    ];
 
-        $rules = [
-            'url' => 'required|url',
-            'link_type' =>'required|in:auto,custom'
-        ];
+    // if ($request->link_type === 'custom') {
+    //     $rules['custom_code'] = 'required|alpha_num|unique:short_urls,short_code|min:3|max:20';
+    // }
+    if ($request->link_type === 'custom') {
+    $rules['custom_code'] = [
+        'required',
+        'alpha_num',
+        'min:3',
+        'max:20',
+        Rule::unique('short_urls', 'short_code')
+    ];
+}
 
-        if($request->link_type === 'custom') {
-            $rules['custom_code'] = 'required|alpha_num|unique:short_urls,short_code|min:3|max:20';
-        }
+    // Validate request
+    $validated = $request->validate($rules);
 
-        $request->validate($rules);
+    // Generate short code
+    $shortCode = $request->link_type === 'custom'
+        ? $request->custom_code
+        : Str::random(6);
 
-        // $request->validate([
-        //     'url'=>'required|url'
-        //     // 'custom_code'=>'required|alpha_num|min:3|max:20'
-        // ]);
-            
+    $shortUrl = url("/{$shortCode}");
 
-        $shortCode = $request->link_type === 'custom'
-        ?$request->custom_code
-        :Str::random(6);
-        $shortUrl = url("/{$shortCode}");
+    // Create QR Code
+    $qrPath = "storage/qrcode/{$shortCode}.svg";
+    Storage::disk('public')->makeDirectory('qrcode');
+    Storage::disk('public')->put(
+        $qrPath,
+        QrCode::format('svg')->size(200)->generate($shortUrl)
+    );
+
+    // Save to database
+    $short = ShortUrl::create([
+        'original_url' => $request->url,
+        'short_code'   => $shortCode,
+        'qr_code_path' => $qrPath
+    ]);
+
+    // If request is AJAX, return JSON
+    if ($request->ajax()) {
+        return response()->json([
+            'success' => true,
+            'short_url' => $shortUrl,
+            'qr_code_path'  => $qrPath
+        ]);
+    }
+
+    // Otherwise return normal view
+    return view('shortener', [
+        'shortUrl' => $shortUrl,
+        'qrCodePath' => $qrPath
+    ]);
+
         
 
-        $qrPath = "qrcode/{$shortCode}.svg";
-        // Storage::makeDirectory($qrPath);
-        // Storage::put($qrPath,QrCode::format('svg')->size(200)->generate($shorUrl));
-        Storage::disk('public')->makeDirectory('qrcode');
-        Storage::disk('public')->put($qrPath,QrCode::format('svg')->size(200)->generate($shortUrl));
-
-
-
-        $short = ShortUrl::create([
-            'original_url'=>$request->input('url'),
-            'short_code'=>$shortCode,
-            'qr_code_path'=>$qrPath
-        ]);
-
-        return view('shortener',[
-            'shortUrl'=>$shortUrl,
-            'qrCodePath'=>$qrPath
-        ]);
     }
 
     public function redirect($code)
@@ -69,9 +94,9 @@ class ShortUrlController extends Controller
         return redirect($short->original_url);
     }
 
-    public function show($shortcode)
-    {
-        $short = ShortUrl::where('short_code', $shortcode)->firstOrFail();
-        return redirect()->away($short->original_url);
-    }
+    // public function show($shortcode)
+    // {
+    //     $short = ShortUrl::where('short_code', $shortcode)->firstOrFail();
+    //     return redirect()->away($short->original_url);
+    // }
 }

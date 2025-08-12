@@ -4,9 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ShortUrlController; 
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
-Route::get('/', function () {
-    return view('shortener');
-});
-Route::get('/',[ShortUrlController::class,'index']);
+Route::get('/', [ShortUrlController::class, 'index'])->name('home');
+Route::get('/shorten',[ShortUrlController::class,'index'])->name('shorten.create');
 Route::post('/shorten',[ShortUrlController::class,'store'])->name('shorten.store');
-Route::get('/{code}',[ShortUrlController::class,'show']);
+Route::get('/{ShortCode}',[ShortUrlController::class,'redirect'])->name('shorten.redirect');
