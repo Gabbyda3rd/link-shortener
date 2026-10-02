@@ -1,10 +1,47 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\ShortUrlController; 
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use App\Http\Controllers\ShortUrlController;
+use App\Http\Controllers\AdminController;
 
-Route::get('/', [ShortUrlController::class, 'index'])->name('home');
-Route::get('/shorten',[ShortUrlController::class,'index'])->name('shorten.create');
-Route::post('/shorten',[ShortUrlController::class,'store'])->name('shorten.store');
-Route::get('/{ShortCode}',[ShortUrlController::class,'redirect'])->name('shorten.redirect');
+// Public redirect routes
+Route::get('/{shortCode}', [ShortUrlController::class, 'preview'])
+    ->middleware('throttle:link-preview')
+    ->name('redirect.preview');
+
+Route::post('/{shortCode}/confirm', [ShortUrlController::class, 'confirm'])
+    ->middleware('throttle:link-confirm')
+    ->name('redirect.confirm');
+
+
+
+// Protected routes — must be logged in
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/', [ShortUrlController::class, 'index'])->name('home');
+    Route::get('/dashboard', [ShortUrlController::class, 'index'])->name('dashboard');
+    Route::get('/shorten', [ShortUrlController::class, 'index'])->name('shorten.index');
+    Route::post('/shorten', [ShortUrlController::class, 'store'])->middleware('throttle:link-create')->name('shorten.store');
+});
+
+// Admin routes
+Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', [AdminController::class, 'index'])->name('dashboard');
+
+    // Link management
+    Route::get('/links', [AdminController::class, 'links'])->name('links');
+    Route::delete('/links/{shortUrl}', [AdminController::class, 'deleteLink'])->name('links.destroy');
+    Route::patch('/links/{shortUrl}/expiry', [AdminController::class, 'updateExpiry'])->name('links.expiry');
+
+    // User management
+    Route::get('/users', [AdminController::class, 'users'])->name('users');
+    Route::patch('/users/{user}/toggle', [AdminController::class, 'toggleUser'])->name('users.toggle');
+    Route::patch('/users/{user}/admin', [AdminController::class, 'toggleAdmin'])->name('users.admin');
+
+    // Analytics
+    Route::get('/analytics', [AdminController::class, 'analytics'])->name('analytics');
+
+    // Audit log
+    Route::get('/audit-log', [AdminController::class, 'auditLog'])->name('audit-log');
+});
+
+require __DIR__.'/auth.php';
