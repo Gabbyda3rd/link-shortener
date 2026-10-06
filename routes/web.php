@@ -36,6 +36,10 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/users', [AdminController::class, 'users'])->name('users');
     Route::patch('/users/{user}/toggle', [AdminController::class, 'toggleUser'])->name('users.toggle');
     Route::patch('/users/{user}/admin', [AdminController::class, 'toggleAdmin'])->name('users.admin');
+    Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');
+    Route::put('/users/{user}', [AdminController::class, 'updateUser'])->name('users.update');
+    Route::delete('/users/{user}', [AdminController::class, 'deleteUser'])->name('users.destroy');
+
 
     // Analytics
     Route::get('/analytics', [AdminController::class, 'analytics'])->name('analytics');

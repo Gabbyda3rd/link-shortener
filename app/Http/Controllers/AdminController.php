@@ -90,6 +90,82 @@ class AdminController extends Controller
         ]);
     }
 
+    public function storeUser(Request $request)
+    {
+        $data = $request->validate([
+            'fname' => 'required|string|max:255',
+            'mname' => 'nullable|string|max:255',
+            'lname' => 'required|string|max:255',
+            'up_email' => 'nullable|email|unique:users,up_email',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8|max:72',
+            'is_admin' => 'boolean',
+            'is_active' => 'boolean',
+        ]);
+
+
+        $data['name'] = trim("{$data['fname']} {$data['mname']} {$data['lname']}");
+
+        $user = User::create($data);
+
+        $user->forceFill(['email_verified_at' => now()])->save();
+
+        AuditLog::log('user_created', $user, [
+            'email' => $user->email,
+        ]);
+
+        return back()->with('success', 'User created successfully.');
+    }
+
+    public function updateUser(Request $request, User $user)
+    {
+        $data = $request->validate([
+            'fname' => 'required|string|max:255',
+            'mname' => 'nullable|string|max:255',
+            'lname' => 'required|string|max:255',
+            'up_email' => 'nullable|email|unique:users,up_email',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8|max:72',
+            'is_admin' => 'boolean',
+            'is_active' => 'boolean',
+        ]);
+
+        if($user->id === Auth::id()){
+            unset($data['is_admin'],$data['is_active']);
+        }
+
+        if(empty($data['password'])){
+            unset($data['password']);
+        }
+
+        $user->udpate($data);
+
+        AuditLog::log('user_updated', $user,[
+            'email' => $user->email,
+            'password' => $request->filled('password'),
+        ]);
+
+        return back()->with('success', 'User updated successfully.');
+
+    }
+
+    public function deleteUser(User $user)
+    {
+        if($user->id === Auth::id()){
+            return back()->with('error','You cannot delete yourself.');
+        }
+
+        if($user->shortUrls()->exists()){
+            return back()->with('error','This user has associated links and cannot be deleted.');
+        }
+
+        AuditLog::log('user_deleted',$user,[['email'=> $user->email]]);
+
+        $user->delete();
+
+        return back()->with('success','User deleted successfully.');    
+    }
+
     public function toggleUser(User $user)
     {
         if ($user->id === Auth::id()) {

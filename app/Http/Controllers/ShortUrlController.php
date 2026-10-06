@@ -13,6 +13,8 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Illuminate\Support\Facades\Hash;
+
 
 class ShortUrlController extends Controller
 {
@@ -38,6 +40,7 @@ class ShortUrlController extends Controller
             'link_type'   => 'required|in:auto,custom,qr_only',
             'expires_at'  => 'nullable|date|after:now',
             'generate_qr' => 'boolean',
+            'password'   => 'nullable|string|min:6|max:255',
         ];
 
         if ($request->link_type === 'custom') {
@@ -113,6 +116,7 @@ class ShortUrlController extends Controller
             'expires_at'   => $request->expires_at
                 ? Carbon::parse($request->expires_at)
                 : null,
+            'password'     => $request->filled('password') ? Hash::make($request->password) : null,
         ]);
 
         // POST → Redirect → GET pattern
@@ -140,9 +144,10 @@ class ShortUrlController extends Controller
         }
 
         return Inertia::render('LinkPreview', [
-            'short_code'   => $short->short_code,
-            'original_url' => $short->original_url,
-            'short_url'    => url("/{$short->short_code}"),
+            'short_code'        => $short->short_code,
+            'original_url'      => $short->original_url,
+            'requires_password' => $short->has_password,
+            'short_url'         => url("/{$short->short_code}"),
             'expires_at'   => $short->expires_at?->toIso8601String(),
         ]);
     }
@@ -156,6 +161,18 @@ class ShortUrlController extends Controller
             // status would show Inertia's error modal instead of the page.
             return Inertia::render('LinkExpired');
         }
+
+        if($short->has_password){
+            $request->validate([
+                'password'  => ['required','string']
+            ]);
+
+            if(! Hash::check($request->password, $short->password)){
+                return back()->withErrors(['password' => 'Incorrect password.']);
+            }
+        }
+
+
 
         AuditLog::log('link_visited', $short, [
             'short_code' => $short->short_code,
