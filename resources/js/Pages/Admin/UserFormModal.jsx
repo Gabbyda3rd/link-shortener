@@ -13,7 +13,7 @@ export default function UserFormModal({ user, onClose }) {
         up_email: user?.up_email ?? '',
         password: '',
         is_admin: user?.is_admin ?? false,
-        is_active: user?.is_active ?? true,
+        is_active: user?.is_active ?? true, 
     });
 
     const submit = (e) => {
