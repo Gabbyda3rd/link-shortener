@@ -63,7 +63,7 @@ export default function Login({ status, canResetPassword }) {
                                     IKLI
                                 </h1>
                                 <p className="text-xs font-semibold px-4 leading-snug text-white/80">
-                                    Link Integration & Information Tool
+                                    Instant Key Link Integration
                                 </p>
 
                                 <div className="h-px w-16 bg-[#FFD100]/40 mx-auto rounded-full my-3" />

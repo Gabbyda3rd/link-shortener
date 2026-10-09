@@ -11,6 +11,7 @@ class ShortUrl extends Model
         'user_id',
         'original_url',
         'short_code',
+        'title',
         'qr_code_path',
         'visit_count',
         'expires_at',

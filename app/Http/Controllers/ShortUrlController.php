@@ -40,6 +40,7 @@ class ShortUrlController extends Controller
             'link_type'   => 'required|in:auto,custom,qr_only',
             'expires_at'  => 'nullable|date|after:now',
             'generate_qr' => 'boolean',
+            'title'       => 'nullable|string|max:100', 
             'password'   => 'nullable|string|min:6|max:255',
         ];
 
@@ -113,6 +114,7 @@ class ShortUrlController extends Controller
             'original_url' => $request->url,
             'short_code'   => $shortCode,
             'qr_code_path' => $qrPath,
+            'title'        => $request->title,
             'expires_at'   => $request->expires_at
                 ? Carbon::parse($request->expires_at)
                 : null,

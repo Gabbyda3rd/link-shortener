@@ -21,7 +21,7 @@ export default function AuthenticatedLayout({ children }) {
                     <div className="flex h-14 items-center justify-between">
 
                         {/* Logo */}
-                        <Link href={route('home')} className="flex items-center gap-2.5">
+                        <Link href={route('shorten.index')} className="flex items-center gap-2.5">
                             <div
                                 className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-extrabold"
                                 style={{ background: '#7B1113' }}
@@ -36,15 +36,13 @@ export default function AuthenticatedLayout({ children }) {
 
                         {/* Desktop nav */}
                         <div className="hidden sm:flex items-center gap-6">
-                            <Link href={route('home')} className="text-sm text-stone-600 hover:text-stone-900 transition">
+                            <Link href={route('shorten.index')} className="text-sm text-stone-600 hover:text-stone-900 transition">
                                 Shorten a link
                             </Link>
-                            <Link href={route('home')} className="text-sm text-stone-600 hover:text-stone-900 transition">
-                                Recent links
+                            <Link href={route('links.index')} className="text-sm text-stone-600 hover:text-stone-900 transition">
+                                My links
                             </Link>
-                            <span className="text-sm text-stone-600 cursor-default">About IKLI</span>
 
-                            {/* Admin link — admins only */}
                             {user.is_admin && (
                                 <Link
                                     href={route('admin.dashboard')}
@@ -82,7 +80,7 @@ export default function AuthenticatedLayout({ children }) {
                                         <p className="text-xs font-semibold text-stone-800">{user.name}</p>
                                         <p className="text-xs text-stone-400">{user.email}</p>
                                         {user.is_admin && (
-                                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#7B1113] bg-[#7B1113]/8 px-1.5 py-0.5 rounded-full mt-1">
+                                            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#7B1113] bg-[#7B1113]/10 px-1.5 py-0.5 rounded-full mt-1">
                                                 <ShieldCheckIcon className="w-2.5 h-2.5" /> Admin
                                             </span>
                                         )}
@@ -103,6 +101,7 @@ export default function AuthenticatedLayout({ children }) {
                         <button
                             className="sm:hidden p-2 rounded-md text-stone-500 hover:bg-stone-100"
                             onClick={() => setMobileOpen(!mobileOpen)}
+                            aria-label="Toggle menu"
                         >
                             <svg className="w-5 h-5" stroke="currentColor" fill="none" viewBox="0 0 24 24">
                                 {mobileOpen
@@ -117,8 +116,9 @@ export default function AuthenticatedLayout({ children }) {
                 {/* Mobile menu */}
                 {mobileOpen && (
                     <div className="sm:hidden border-t border-stone-100 px-4 py-3 space-y-2">
-                        <Link href={route('home')} className="block text-sm text-stone-700 py-1.5">Shorten a link</Link>
-                        <Link href={route('home')} className="block text-sm text-stone-700 py-1.5">Recent links</Link>
+                        <Link href={route('shorten.index')} className="block text-sm text-stone-700 py-1.5">Shorten a link</Link>
+                        <Link href={route('links.index')} className="block text-sm text-stone-700 py-1.5">My links</Link>
+
                         {user.is_admin && (
                             <Link
                                 href={route('admin.dashboard')}

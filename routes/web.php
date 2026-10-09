@@ -3,17 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ShortUrlController;
 use App\Http\Controllers\AdminController;
-
-// Public redirect routes
-Route::get('/{shortCode}', [ShortUrlController::class, 'preview'])
-    ->middleware('throttle:link-preview')
-    ->name('redirect.preview');
-
-Route::post('/{shortCode}/confirm', [ShortUrlController::class, 'confirm'])
-    ->middleware('throttle:link-confirm')
-    ->name('redirect.confirm');
-
-
+use App\Http\Controllers\LinkController;
 
 // Protected routes — must be logged in
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -21,7 +11,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [ShortUrlController::class, 'index'])->name('dashboard');
     Route::get('/shorten', [ShortUrlController::class, 'index'])->name('shorten.index');
     Route::post('/shorten', [ShortUrlController::class, 'store'])->middleware('throttle:link-create')->name('shorten.store');
+    Route::get('/links', [LinkController::class, 'index'])->name('links.index');
+    Route::get('/links/{shortUrl}', [LinkController::class, 'show'])->name('links.show');
+    Route::delete('/links/{shortUrl}', [LinkController::class, 'destroy'])->name('links.destroy');
+    Route::patch('/links/{shortUrl}', [LinkController::class, 'update'])->name('links.update');
 });
+
+
+require __DIR__.'/auth.php';
+
 
 // Admin routes
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
@@ -48,4 +46,12 @@ Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.'
     Route::get('/audit-log', [AdminController::class, 'auditLog'])->name('audit-log');
 });
 
-require __DIR__.'/auth.php';
+
+// Public redirect routes
+Route::get('/{shortCode}', [ShortUrlController::class, 'preview'])
+    ->middleware('throttle:link-preview')
+    ->name('redirect.preview');
+
+Route::post('/{shortCode}/confirm', [ShortUrlController::class, 'confirm'])
+    ->middleware('throttle:link-confirm')
+    ->name('redirect.confirm');

@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Carbon\Carbon;
+use Illuminate\Validation\Rule;
 
 class AdminController extends Controller
 {
@@ -123,8 +124,8 @@ class AdminController extends Controller
             'fname' => 'required|string|max:255',
             'mname' => 'nullable|string|max:255',
             'lname' => 'required|string|max:255',
-            'up_email' => 'nullable|email|unique:users,up_email',
-            'email' => 'required|email|unique:users,email',
+            'email'    => ['required', 'email', Rule::unique('users', 'email')->ignore($user->id)],
+            'up_email' => ['nullable', 'email', Rule::unique('users', 'up_email')->ignore($user->id)],
             'password' => 'required|string|min:8|max:72',
             'is_admin' => 'boolean',
             'is_active' => 'boolean',
@@ -138,7 +139,7 @@ class AdminController extends Controller
             unset($data['password']);
         }
 
-        $user->udpate($data);
+        $user->update($data);
 
         AuditLog::log('user_updated', $user,[
             'email' => $user->email,
